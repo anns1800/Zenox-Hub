@@ -12,7 +12,6 @@ Frame.Position = UDim2.new(0, 100, 0, 100)
 Frame.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
 Frame.BorderSizePixel = 0
 
--- Fonction création bouton pour éviter répétition
 local function createButton(parent, posY, text)
     local btn = Instance.new("TextButton", parent)
     btn.Size = UDim2.new(0, 250, 0, 40)
@@ -25,14 +24,12 @@ local function createButton(parent, posY, text)
     return btn
 end
 
--- Variables d'état
 local godModeActive = false
 local speedActive = false
 local antiHitActive = false
 
 -- God Mode
 local GodButton = createButton(Frame, 10, "🛡 God Mode OFF")
-
 local function enableGodMode()
     godModeActive = true
     GodButton.Text = "🛡 God Mode ON"
@@ -46,12 +43,10 @@ local function enableGodMode()
         end
     end)
 end
-
 local function disableGodMode()
     godModeActive = false
     GodButton.Text = "🛡 God Mode OFF"
 end
-
 GodButton.MouseButton1Click:Connect(function()
     if godModeActive then
         disableGodMode()
@@ -60,18 +55,16 @@ GodButton.MouseButton1Click:Connect(function()
     end
 end)
 
--- Speed x3
+-- Speed
 local SpeedButton = createButton(Frame, 60, "⚡ Speed x3 OFF")
-
 local function enableSpeed()
     speedActive = true
     SpeedButton.Text = "⚡ Speed x3 ON"
     local humanoid = player.Character and player.Character:FindFirstChildOfClass("Humanoid")
     if humanoid then
-        humanoid.WalkSpeed = 48 -- vitesse normale = 16
+        humanoid.WalkSpeed = 48
     end
 end
-
 local function disableSpeed()
     speedActive = false
     SpeedButton.Text = "⚡ Speed x3 OFF"
@@ -80,7 +73,6 @@ local function disableSpeed()
         humanoid.WalkSpeed = 16
     end
 end
-
 SpeedButton.MouseButton1Click:Connect(function()
     if speedActive then
         disableSpeed()
@@ -91,7 +83,6 @@ end)
 
 -- Anti-Hit (désactive collisions)
 local AntiHitButton = createButton(Frame, 110, "🚫 Anti-Hit OFF")
-
 local function setNoCollide(character)
     for _, part in pairs(character:GetChildren()) do
         if part:IsA("BasePart") then
@@ -99,7 +90,6 @@ local function setNoCollide(character)
         end
     end
 end
-
 local function setCollide(character)
     for _, part in pairs(character:GetChildren()) do
         if part:IsA("BasePart") then
@@ -107,7 +97,6 @@ local function setCollide(character)
         end
     end
 end
-
 local function enableAntiHit()
     antiHitActive = true
     AntiHitButton.Text = "🚫 Anti-Hit ON"
@@ -115,7 +104,6 @@ local function enableAntiHit()
         setNoCollide(player.Character)
     end
 end
-
 local function disableAntiHit()
     antiHitActive = false
     AntiHitButton.Text = "🚫 Anti-Hit OFF"
@@ -123,7 +111,6 @@ local function disableAntiHit()
         setCollide(player.Character)
     end
 end
-
 AntiHitButton.MouseButton1Click:Connect(function()
     if antiHitActive then
         disableAntiHit()
@@ -132,16 +119,9 @@ AntiHitButton.MouseButton1Click:Connect(function()
     end
 end)
 
--- Gérer respawn pour garder états
 player.CharacterAdded:Connect(function()
     wait(1)
-    if godModeActive then
-        enableGodMode()
-    end
-    if speedActive then
-        enableSpeed()
-    end
-    if antiHitActive then
-        enableAntiHit()
-    end
+    if godModeActive then enableGodMode() end
+    if speedActive then enableSpeed() end
+    if antiHitActive then enableAntiHit() end
 end)
