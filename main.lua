@@ -1,14 +1,11 @@
--- ✅ Anti-Ragdoll avec GUI ON/OFF – Spécial Steal a Brainrot
-local lp = game.Players.LocalPlayer
-local CoreGui = game:GetService("CoreGui")
-local starterGui = game:GetService("StarterGui")
+-- ✅ Anti-Ragdoll avec bouton ON/OFF – version Delta (PlayerGui)
+local player = game.Players.LocalPlayer
+local gui = Instance.new("ScreenGui")
+gui.Name = "NoRagdollGUI"
+gui.ResetOnSpawn = false
+gui.Parent = player:WaitForChild("PlayerGui")
 
--- GUI
-local ScreenGui = Instance.new("ScreenGui", CoreGui)
-local button = Instance.new("TextButton", ScreenGui)
-
-ScreenGui.Name = "NoRagdollGUI"
-button.Name = "ToggleButton"
+local button = Instance.new("TextButton")
 button.Size = UDim2.new(0, 160, 0, 50)
 button.Position = UDim2.new(0, 20, 0, 200)
 button.Text = "🛡 No Ragdoll: OFF"
@@ -16,39 +13,38 @@ button.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
 button.TextColor3 = Color3.new(1, 1, 1)
 button.Font = Enum.Font.SourceSansBold
 button.TextSize = 20
-button.BorderSizePixel = 0
+button.Parent = gui
 
--- Script
 local enabled = false
 local connection = nil
 
-local function enableAntiRagdoll()
-    local char = lp.Character or lp.CharacterAdded:Wait()
+local function enableNoRagdoll()
+    local char = player.Character or player.CharacterAdded:Wait()
     local hum = char:WaitForChild("Humanoid")
 
-    -- Bloquer les états de chute
     hum:SetStateEnabled(Enum.HumanoidStateType.Ragdoll, false)
     hum:SetStateEnabled(Enum.HumanoidStateType.FallingDown, false)
     hum:SetStateEnabled(Enum.HumanoidStateType.Physics, false)
     hum.PlatformStand = false
 
-    -- Réagir si le jeu essaie de changer ton état
     connection = hum.StateChanged:Connect(function(_, new)
-        if new == Enum.HumanoidStateType.Ragdoll or new == Enum.HumanoidStateType.FallingDown or new == Enum.HumanoidStateType.Physics then
+        if new == Enum.HumanoidStateType.Ragdoll
+        or new == Enum.HumanoidStateType.FallingDown
+        or new == Enum.HumanoidStateType.Physics then
             hum:ChangeState(Enum.HumanoidStateType.GettingUp)
         end
     end)
 end
 
-local function disableAntiRagdoll()
+local function disableNoRagdoll()
     if connection then
         connection:Disconnect()
         connection = nil
     end
 
-    local char = lp.Character
+    local char = player.Character
     if char then
-        local hum = char:FindFirstChildWhichIsA("Humanoid")
+        local hum = char:FindFirstChildOfClass("Humanoid")
         if hum then
             hum:SetStateEnabled(Enum.HumanoidStateType.Ragdoll, true)
             hum:SetStateEnabled(Enum.HumanoidStateType.FallingDown, true)
@@ -60,22 +56,12 @@ end
 button.MouseButton1Click:Connect(function()
     enabled = not enabled
     if enabled then
-        enableAntiRagdoll()
+        enableNoRagdoll()
         button.Text = "🛡 No Ragdoll: ON"
         button.BackgroundColor3 = Color3.fromRGB(0, 150, 0)
-        starterGui:SetCore("SendNotification", {
-            Title = "Protection activée",
-            Text = "Tu ne peux plus être éjecté.",
-            Duration = 3
-        })
     else
-        disableAntiRagdoll()
+        disableNoRagdoll()
         button.Text = "🛡 No Ragdoll: OFF"
         button.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-        starterGui:SetCore("SendNotification", {
-            Title = "Protection désactivée",
-            Text = "Tu peux à nouveau être frappé normalement.",
-            Duration = 3
-        })
     end
 end)
