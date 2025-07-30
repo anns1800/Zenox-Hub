@@ -1,4 +1,4 @@
--- GUI Setup
+-- Services
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
@@ -8,12 +8,12 @@ local humanoid = character:WaitForChild("Humanoid")
 local rootPart = character:WaitForChild("HumanoidRootPart")
 local hitRemote = ReplicatedStorage:WaitForChild("HitPlayer")
 
--- Crée la GUI
+-- GUI setup
 local ScreenGui = Instance.new("ScreenGui", localPlayer:WaitForChild("PlayerGui"))
 ScreenGui.Name = "CheatGUI"
 
 local frame = Instance.new("Frame", ScreenGui)
-frame.Size = UDim2.new(0, 220, 0, 170)
+frame.Size = UDim2.new(0, 220, 0, 180)
 frame.Position = UDim2.new(0, 10, 0, 10)
 frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
 frame.BorderSizePixel = 0
@@ -39,13 +39,12 @@ local antiHitOn = false
 local attackSpamOn = false
 local noHitboxOn = false
 
--- Anti-Hit logic (régénération santé côté client)
+-- Anti-Hit logic (client-side health regen)
 antiHitButton.MouseButton1Click:Connect(function()
     antiHitOn = not antiHitOn
     antiHitButton.Text = "Anti-Hit: " .. (antiHitOn and "ON" or "OFF")
+
     if antiHitOn then
-        print("[Anti-Hit] Activé")
-        -- Boucle pour remettre la vie à 100
         spawn(function()
             while antiHitOn do
                 wait(0.1)
@@ -54,40 +53,54 @@ antiHitButton.MouseButton1Click:Connect(function()
                 end
             end
         end)
-    else
-        print("[Anti-Hit] Désactivé")
     end
 end)
 
--- Attack Spam logic (envoie une attaque toutes les secondes)
+-- Attack spam furtif (téléportation + attaque)
 attackSpamButton.MouseButton1Click:Connect(function()
     attackSpamOn = not attackSpamOn
     attackSpamButton.Text = "Attack Spam: " .. (attackSpamOn and "ON" or "OFF")
+
     if attackSpamOn then
-        print("[Attack Spam] Activé")
         spawn(function()
             while attackSpamOn do
                 wait(1)
+
+                -- Trouver la cible la plus proche (simple)
                 local target = nil
                 for _, plr in pairs(Players:GetPlayers()) do
-                    if plr ~= localPlayer then
+                    if plr ~= localPlayer and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
                         target = plr
                         break
                     end
                 end
-                if target then
-                    pcall(function()
-                        hitRemote:FireServer(target.Name, 30)
-                    end)
-                end
+                if not target then continue end
+
+                local myRoot = rootPart
+                local targetRoot = target.Character:FindFirstChild("HumanoidRootPart")
+                if not myRoot or not targetRoot then continue end
+
+                local originalCFrame = myRoot.CFrame
+
+                -- Téléportation furtive proche de la cible
+                myRoot.CFrame = targetRoot.CFrame * CFrame.new(0, 0, -2)
+                wait(0.1)
+
+                -- Envoi de l'attaque
+                pcall(function()
+                    hitRemote:FireServer(target.Name, 30)
+                end)
+
+                wait(0.05)
+
+                -- Retour à la position originale
+                myRoot.CFrame = originalCFrame
             end
         end)
-    else
-        print("[Attack Spam] Désactivé")
     end
 end)
 
--- No Hitbox logic (rend les parties invisibles pour éviter d'être touché côté client)
+-- No Hitbox (transparence + no collision)
 noHitboxButton.MouseButton1Click:Connect(function()
     noHitboxOn = not noHitboxOn
     noHitboxButton.Text = "No Hitbox: " .. (noHitboxOn and "ON" or "OFF")
@@ -102,11 +115,5 @@ noHitboxButton.MouseButton1Click:Connect(function()
                 part.CanCollide = true
             end
         end
-    end
-
-    if noHitboxOn then
-        print("[No Hitbox] Activé")
-    else
-        print("[No Hitbox] Désactivé")
     end
 end)
