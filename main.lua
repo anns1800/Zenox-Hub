@@ -1,32 +1,22 @@
--- ✅ Anti-Ragdoll avec bouton ON/OFF – version Delta (PlayerGui)
-local player = game.Players.LocalPlayer
-local gui = Instance.new("ScreenGui")
-gui.Name = "NoRagdollGUI"
-gui.ResetOnSpawn = false
-gui.Parent = player:WaitForChild("PlayerGui")
-
-local button = Instance.new("TextButton")
-button.Size = UDim2.new(0, 160, 0, 50)
-button.Position = UDim2.new(0, 20, 0, 200)
-button.Text = "🛡 No Ragdoll: OFF"
-button.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-button.TextColor3 = Color3.new(1, 1, 1)
-button.Font = Enum.Font.SourceSansBold
-button.TextSize = 20
-button.Parent = gui
+-- ✅ No Ragdoll / Anti-éjection avec touche N
+local UserInputService = game:GetService("UserInputService")
+local StarterGui = game:GetService("StarterGui")
+local lp = game.Players.LocalPlayer
 
 local enabled = false
 local connection = nil
 
 local function enableNoRagdoll()
-    local char = player.Character or player.CharacterAdded:Wait()
+    local char = lp.Character or lp.CharacterAdded:Wait()
     local hum = char:WaitForChild("Humanoid")
 
+    -- Bloquer les états
     hum:SetStateEnabled(Enum.HumanoidStateType.Ragdoll, false)
     hum:SetStateEnabled(Enum.HumanoidStateType.FallingDown, false)
     hum:SetStateEnabled(Enum.HumanoidStateType.Physics, false)
     hum.PlatformStand = false
 
+    -- Réagir si le jeu veut te stun
     connection = hum.StateChanged:Connect(function(_, new)
         if new == Enum.HumanoidStateType.Ragdoll
         or new == Enum.HumanoidStateType.FallingDown
@@ -34,34 +24,50 @@ local function enableNoRagdoll()
             hum:ChangeState(Enum.HumanoidStateType.GettingUp)
         end
     end)
+
+    StarterGui:SetCore("SendNotification", {
+        Title = "✅ No Hit activé",
+        Text = "Tu ne tomberas plus si on te tape.",
+        Duration = 4
+    })
 end
 
 local function disableNoRagdoll()
-    if connection then
-        connection:Disconnect()
-        connection = nil
-    end
+    if connection then connection:Disconnect() end
 
-    local char = player.Character
+    local char = lp.Character
     if char then
-        local hum = char:FindFirstChildOfClass("Humanoid")
+        local hum = char:FindFirstChildWhichIsA("Humanoid")
         if hum then
             hum:SetStateEnabled(Enum.HumanoidStateType.Ragdoll, true)
             hum:SetStateEnabled(Enum.HumanoidStateType.FallingDown, true)
             hum:SetStateEnabled(Enum.HumanoidStateType.Physics, true)
         end
     end
+
+    StarterGui:SetCore("SendNotification", {
+        Title = "❌ No Hit désactivé",
+        Text = "Tu peux de nouveau tomber si on te frappe.",
+        Duration = 4
+    })
 end
 
-button.MouseButton1Click:Connect(function()
-    enabled = not enabled
-    if enabled then
-        enableNoRagdoll()
-        button.Text = "🛡 No Ragdoll: ON"
-        button.BackgroundColor3 = Color3.fromRGB(0, 150, 0)
-    else
-        disableNoRagdoll()
-        button.Text = "🛡 No Ragdoll: OFF"
-        button.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-    end
+-- Touche N pour ON/OFF
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+    if gameProcessed then return end
+    if input.KeyCode == Enum.KeyCode.N then
+        enabled = not enabled
+        if enabled then
+            enableNoRagdoll()
+        else
+            disableNoRagdoll()
+        end
+    end
 end)
+
+-- Message de démarrage
+StarterGui:SetCore("SendNotification", {
+    Title = "🛡 No Hit prêt",
+    Text = "Appuie sur N pour activer ou désactiver.",
+    Duration = 5
+})
