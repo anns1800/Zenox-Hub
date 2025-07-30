@@ -1,4 +1,4 @@
--- ⚙️ Services
+-- ✅ SERVICES
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local lp = Players.LocalPlayer
@@ -6,40 +6,43 @@ local char = lp.Character or lp.CharacterAdded:Wait()
 local hum = char:WaitForChild("Humanoid")
 local root = char:WaitForChild("HumanoidRootPart")
 
--- 🖥️ GUI
+-- ✅ GUI
 local gui = Instance.new("ScreenGui", lp:WaitForChild("PlayerGui"))
-gui.Name = "AntiTools"
+gui.Name = "AntiToolsGUI"
+gui.ResetOnSpawn = false
 
 local frame = Instance.new("Frame", gui)
-frame.Size = UDim2.new(0, 200, 0, 180)
+frame.Size = UDim2.new(0, 200, 0, 200)
 frame.Position = UDim2.new(0, 20, 0, 20)
 frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
 frame.BorderSizePixel = 0
 
-local function createButton(name, y)
-	local btn = Instance.new("TextButton", frame)
+-- ✅ Fonction pour créer un bouton
+local function createButton(label, posY)
+	local btn = Instance.new("TextButton")
 	btn.Size = UDim2.new(1, 0, 0, 40)
-	btn.Position = UDim2.new(0, 0, 0, y)
+	btn.Position = UDim2.new(0, 0, 0, posY)
 	btn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
 	btn.TextColor3 = Color3.new(1, 1, 1)
-	btn.Text = name .. ": OFF"
-	btn.Font = Enum.Font.SourceSans
+	btn.Font = Enum.Font.SourceSansBold
 	btn.TextSize = 20
+	btn.Text = label .. ": OFF"
+	btn.Parent = frame
 	return btn
 end
 
--- 🔘 Boutons et états
+-- ✅ Variables d'état
 local noHitOn = false
 local dodgeOn = false
 local blockHitOn = false
-
-local btn1 = createButton("No-Hitbox", 0)
-local btn2 = createButton("Auto-Dodge", 50)
-local btn3 = createButton("Block Damage", 100)
-
--- 🧱 No-Hitbox
 local originalParts = {}
 
+-- ✅ Création des boutons
+local noHitButton = createButton("No-Hitbox", 0)
+local dodgeButton = createButton("Auto-Dodge", 50)
+local blockButton = createButton("Block Damage", 100)
+
+-- ✅ FONCTION No-Hitbox (réduction des parties du corps sauf le root)
 local function setNoHitbox(state)
 	for _, part in pairs(char:GetDescendants()) do
 		if part:IsA("BasePart") and part.Name ~= "HumanoidRootPart" then
@@ -57,26 +60,28 @@ local function setNoHitbox(state)
 	end
 end
 
-btn1.MouseButton1Click:Connect(function()
+-- ✅ Lien bouton No-Hitbox
+noHitButton.MouseButton1Click:Connect(function()
 	noHitOn = not noHitOn
-	btn1.Text = "No-Hitbox: " .. (noHitOn and "ON" or "OFF")
+	noHitButton.Text = "No-Hitbox: " .. (noHitOn and "ON" or "OFF")
 	setNoHitbox(noHitOn)
 end)
 
--- 🌀 Auto-Dodge
-btn2.MouseButton1Click:Connect(function()
+-- ✅ Lien bouton Auto-Dodge
+dodgeButton.MouseButton1Click:Connect(function()
 	dodgeOn = not dodgeOn
-	btn2.Text = "Auto-Dodge: " .. (dodgeOn and "ON" or "OFF")
+	dodgeButton.Text = "Auto-Dodge: " .. (dodgeOn and "ON" or "OFF")
 end)
 
--- ❤️ Block Damage (client-side)
-btn3.MouseButton1Click:Connect(function()
+-- ✅ Lien bouton Block Damage
+blockButton.MouseButton1Click:Connect(function()
 	blockHitOn = not blockHitOn
-	btn3.Text = "Block Damage: " .. (blockHitOn and "ON" or "OFF")
+	blockButton.Text = "Block Damage: " .. (blockHitOn and "ON" or "OFF")
 end)
 
--- 🔁 Boucle de protection
+-- ✅ BOUCLE de protection active
 RunService.RenderStepped:Connect(function()
+	-- Auto-Dodge → esquive si un projectile s'approche
 	if dodgeOn and root then
 		for _, obj in pairs(workspace:GetDescendants()) do
 			if obj:IsA("Part") and obj.Velocity.Magnitude > 60 then
@@ -87,7 +92,8 @@ RunService.RenderStepped:Connect(function()
 		end
 	end
 
+	-- Block Damage → remet la vie à 100 (client-side)
 	if blockHitOn and hum and hum.Health < 100 then
-		hum.Health = 100 -- client-side only
+		hum.Health = 100
 	end
-end
+end)
