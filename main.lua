@@ -1,63 +1,36 @@
-local Players = game:GetService("Players")
-local UserInputService = game:GetService("UserInputService")
-local player = Players.LocalPlayer
+-- ✅ Anti-éjection / No Ragdoll – spécial Steal a Brainrot
 
-local mini = false
+local lp = game:GetService("Players").LocalPlayer
 
-local function setMini(state)
-    local char = player.Character or player.CharacterAdded:Wait()
+-- Fonction qui supprime les contraintes responsables des réactions physiques
+local function removePhysicsStuff()
+    local char = lp.Character or lp.CharacterAdded:Wait()
+
+    for _, v in pairs(char:GetDescendants()) do
+        if v:IsA("BallSocketConstraint") or v:IsA("AlignPosition") or v:IsA("AlignOrientation") or v:IsA("HingeConstraint") then
+            v:Destroy()
+        end
+    end
+
+    -- Désactive les collisions avec le décor et les autres joueurs
+    for _, part in pairs(char:GetDescendants()) do
+        if part:IsA("BasePart") then
+            part.CanCollide = true
+            part.CustomPhysicalProperties = PhysicalProperties.new(1000, 0, 0) -- super lourd, pas de rebond
+        end
+    end
+
+    -- Empêche les animations de tomber
     local humanoid = char:FindFirstChildOfClass("Humanoid")
-    if not humanoid then return end
-
-    if state then
-        if humanoid:FindFirstChild("BodyHeightScale") then
-            humanoid.BodyHeightScale.Value = 0.3
-        end
-        if humanoid:FindFirstChild("BodyWidthScale") then
-            humanoid.BodyWidthScale.Value = 0.3
-        end
-        if humanoid:FindFirstChild("BodyDepthScale") then
-            humanoid.BodyDepthScale.Value = 0.3
-        end
-        if humanoid:FindFirstChild("BodyProportionScale") then
-            humanoid.BodyProportionScale.Value = 0.3
-        end
-        game.StarterGui:SetCore("SendNotification", {
-            Title = "Mini-taille activée",
-            Text = "Tu es maintenant plus petit !",
-            Duration = 3
-        })
-    else
-        if humanoid:FindFirstChild("BodyHeightScale") then
-            humanoid.BodyHeightScale.Value = 1
-        end
-        if humanoid:FindFirstChild("BodyWidthScale") then
-            humanoid.BodyWidthScale.Value = 1
-        end
-        if humanoid:FindFirstChild("BodyDepthScale") then
-            humanoid.BodyDepthScale.Value = 1
-        end
-        if humanoid:FindFirstChild("BodyProportionScale") then
-            humanoid.BodyProportionScale.Value = 1
-        end
-        game.StarterGui:SetCore("SendNotification", {
-            Title = "Taille normale",
-            Text = "Retour à la taille normale.",
-            Duration = 3
-        })
+    if humanoid then
+        humanoid.PlatformStand = false
+        humanoid:SetStateEnabled(Enum.HumanoidStateType.Ragdoll, false)
+        humanoid:SetStateEnabled(Enum.HumanoidStateType.FallingDown, false)
+        humanoid:SetStateEnabled(Enum.HumanoidStateType.Physics, false)
     end
 end
 
-UserInputService.InputBegan:Connect(function(input, gameProcessed)
-    if gameProcessed then return end
-    if input.KeyCode == Enum.KeyCode.M then -- Touche M pour toggle
-        mini = not mini
-        setMini(mini)
-    end
-end)
-
-game.StarterGui:SetCore("SendNotification", {
-    Title = "Mini-taille",
-    Text = "Appuie sur M pour activer/désactiver la mini-taille",
-    Duration = 5
-})
+-- Appliquer en boucle pour contrer les réinjections du jeu
+while true do
+    pcall(removePhysicsStuff)
+    wait(1.5)
