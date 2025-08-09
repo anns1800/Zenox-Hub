@@ -21,11 +21,8 @@ local targetRemote = nil
 print("[Brainrot Saver] Recherche du Remote...")
 local SimpleSpy = loadstring(game:HttpGet("https://raw.githubusercontent.com/exxtremestuffs/SimpleSpySource/master/SimpleSpy.lua"))()
 
--- Quand un Remote est déclenché, on vérifie s'il retire le brainrot
 SimpleSpy.OnRemote(function(remote, args)
     if not targetRemote then
-        -- Ici tu mets une condition pour reconnaître le Remote de brainrot
-        -- Par exemple, si args contient une info unique du brainrot
         if tostring(remote):lower():find("brainrot") or tostring(remote):lower():find("hit") then
             targetRemote = remote
             print("[Brainrot Saver] Remote trouvé :", remote:GetFullName())
@@ -52,5 +49,6 @@ ToggleButton.MouseButton1Click:Connect(function()
         ToggleButton.BackgroundColor3 = Color3.fromRGB(0, 200, 0)
     else
         ToggleButton.Text = "Brainrot Saver: OFF"
-        ToggleButton.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
-    end
+        ToggleButton.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
+    end
+end)
