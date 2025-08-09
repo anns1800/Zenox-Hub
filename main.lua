@@ -1,42 +1,56 @@
--- Script pédagogique amélioré pour illustration uniquement --
+-- UI simple avec bouton ON/OFF
+local ScreenGui = Instance.new("ScreenGui")
+local ToggleButton = Instance.new("TextButton")
 
-local player = game.Players.LocalPlayer
-local character = player.Character or player.CharacterAdded:Wait()
-local humanoid = character:WaitForChild("Humanoid")
+ScreenGui.Parent = game.CoreGui
+ToggleButton.Parent = ScreenGui
+ToggleButton.Size = UDim2.new(0, 150, 0, 50)
+ToggleButton.Position = UDim2.new(0, 20, 0, 200)
+ToggleButton.Text = "Brainrot Saver: OFF"
+ToggleButton.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
+ToggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+ToggleButton.Font = Enum.Font.SourceSansBold
+ToggleButton.TextSize = 20
+ToggleButton.Visible = true
 
--- 1. Suppression des événements côté client
--- Note : hookfunction n'est pas disponible dans Roblox standard.
--- Ce bloc ne fonctionnera que si exécuté via un exploit.
+-- Variables
+local enabled = false
+local targetRemote = nil
 
-if hookfunction then
-    local oldTakeDamage = hookfunction(humanoid.TakeDamage, function(...) 
-        -- Bloquer toute perte de vie
-        return
-    end)
-end
+-- Détection automatique du Remote qui retire le brainrot
+print("[Brainrot Saver] Recherche du Remote...")
+local SimpleSpy = loadstring(game:HttpGet("https://raw.githubusercontent.com/exxtremestuffs/SimpleSpySource/master/SimpleSpy.lua"))()
 
--- 2. Maintien de la santé infinie
-local function keepHealthMax()
-    while true do
-        if humanoid.Health < humanoid.MaxHealth then
-            humanoid.Health = humanoid.MaxHealth
+-- Quand un Remote est déclenché, on vérifie s'il retire le brainrot
+SimpleSpy.OnRemote(function(remote, args)
+    if not targetRemote then
+        -- Ici tu mets une condition pour reconnaître le Remote de brainrot
+        -- Par exemple, si args contient une info unique du brainrot
+        if tostring(remote):lower():find("brainrot") or tostring(remote):lower():find("hit") then
+            targetRemote = remote
+            print("[Brainrot Saver] Remote trouvé :", remote:GetFullName())
         end
-        wait(0.05)  -- Fréquence élevée pour être réactif
     end
-end
+end)
 
-spawn(keepHealthMax)
-
--- 3. Simulation permanente de "zone safe"
-local function maintainSafeZone()
-    while true do
-        if player:GetAttribute("SafeZone") ~= true then
-            player:SetAttribute("SafeZone", true)
-        end
-        wait(1)  -- Réapplique chaque seconde
+-- Hook du Remote
+local oldNamecall
+oldNamecall = hookmetamethod(game, "__namecall", function(self, ...)
+    local method = getnamecallmethod()
+    if enabled and self == targetRemote and method == "FireServer" then
+        print("[Brainrot Saver] Coup reçu bloqué.")
+        return nil
     end
-end
+    return oldNamecall(self, ...)
+end)
 
-spawn(maintainSafeZone)
-
--- 4. Exploits réseau
+-- Bouton pour activer/désactiver
+ToggleButton.MouseButton1Click:Connect(function()
+    enabled = not enabled
+    if enabled then
+        ToggleButton.Text = "Brainrot Saver: ON"
+        ToggleButton.BackgroundColor3 = Color3.fromRGB(0, 200, 0)
+    else
+        ToggleButton.Text = "Brainrot Saver: OFF"
+        ToggleButton.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
+    end
