@@ -17,38 +17,39 @@ ToggleButton.Visible = true
 local enabled = false
 local targetRemote = nil
 
--- Détection automatique du Remote qui retire le brainrot
-print("[Brainrot Saver] Recherche du Remote...")
-local SimpleSpy = loadstring(game:HttpGet("https://raw.githubusercontent.com/exxtremestuffs/SimpleSpySource/master/SimpleSpy.lua"))()
-
-SimpleSpy.OnRemote(function(remote, args)
-    if not targetRemote then
-        if tostring(remote):lower():find("brainrot") or tostring(remote):lower():find("hit") then
-            targetRemote = remote
-            print("[Brainrot Saver] Remote trouvé :", remote:GetFullName())
-        end
-    end
-end)
-
--- Hook du Remote
+-- Détection automatique : on écoute tous les appels de Remote
 local oldNamecall
 oldNamecall = hookmetamethod(game, "__namecall", function(self, ...)
     local method = getnamecallmethod()
-    if enabled and self == targetRemote and method == "FireServer" then
-        print("[Brainrot Saver] Coup reçu bloqué.")
+    
+    -- Si on n'a pas encore trouvé le Remote, on l'enregistre si son nom ressemble à brainrot
+    if not targetRemote and (method == "FireServer" or method == "InvokeServer") then
+        local remoteName = tostring(self):lower()
+        if remoteName:find("brainrot") or remoteName:find("hit") then
+            targetRemote = self
+            print("[Brainrot Saver] Remote détecté :", self:GetFullName())
+        end
+    end
+
+    -- Si activé et que c'est le bon Remote → on bloque
+    if enabled and targetRemote and self == targetRemote and (method == "FireServer" or method == "InvokeServer") then
+        print("[Brainrot Saver] Coup bloqué.")
         return nil
     end
+
     return oldNamecall(self, ...)
 end)
 
--- Bouton pour activer/désactiver
+-- Bouton ON/OFF
 ToggleButton.MouseButton1Click:Connect(function()
     enabled = not enabled
     if enabled then
         ToggleButton.Text = "Brainrot Saver: ON"
         ToggleButton.BackgroundColor3 = Color3.fromRGB(0, 200, 0)
+        print("[Brainrot Saver] ACTIVÉ - Les coups seront bloqués.")
     else
         ToggleButton.Text = "Brainrot Saver: OFF"
         ToggleButton.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
+        print("[Brainrot Saver] DÉSACTIVÉ - Les coups ne sont plus bloqués.")
     end
 end)
